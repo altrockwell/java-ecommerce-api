@@ -32,7 +32,12 @@ import static org.hamcrest.Matchers.containsString;
 class ProductServiceApplicationTests {
 
 	@Container
-	static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
+	static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.2");
+
+	@DynamicPropertySource
+	static void setProperties(DynamicPropertyRegistry dynamicPropertyRegistry){
+		dynamicPropertyRegistry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+	}
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -44,14 +49,9 @@ class ProductServiceApplicationTests {
 
 	private final String productServiceUrl = "/api/product";
 
-
-	@DynamicPropertySource
-	static void setProperties(DynamicPropertyRegistry dynamicPropertyRegistry){
-		dynamicPropertyRegistry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-	}
 	@Test
 	void shouldCreateProduct() throws Exception {
-		ProductRequest productRequest = getProductRequest();
+		ProductRequest productRequest = createProductRequest();
 		String productRequestString = objectMapper.writeValueAsString(productRequest);
 
 		mockMvc.perform(MockMvcRequestBuilders.post(productServiceUrl)
@@ -82,7 +82,7 @@ class ProductServiceApplicationTests {
 
 
 
-	private ProductRequest getProductRequest() {
+	private ProductRequest createProductRequest() {
 		return ProductRequest.builder()
 				.name("Iphone 13")
 				.description("Iphone 13")
